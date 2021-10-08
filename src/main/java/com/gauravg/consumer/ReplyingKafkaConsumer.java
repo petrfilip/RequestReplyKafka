@@ -16,18 +16,26 @@ public class ReplyingKafkaConsumer {
 
   Logger logger = LoggerFactory.getLogger(ReplyingKafkaConsumer.class);
 
+  // @KafkaListener(topics = "${kafka.topic.request-topic}")
+  // @SendTo
+  // public Model listen(Model request) throws InterruptedException {
+  //   if (random.nextBoolean()) {
+  //     logger.warn("With delay");
+  //     Thread.sleep(6000);
+  //   } else {
+  //     logger.debug("Without delay");
+  //   }
+  //   int sum = request.getFirstNumber() + request.getSecondNumber();
+  //   request.setAdditionalProperty("sum", sum);
+  //   return request;
+  // }
+
+
   @KafkaListener(topics = "${kafka.topic.request-topic}")
   @SendTo
-  public Model listen(Model request) throws InterruptedException {
-    if (random.nextBoolean()) {
-      logger.warn("With delay");
-      Thread.sleep(6000);
-    } else {
-      logger.debug("Without delay");
-    }
-    int sum = request.getFirstNumber() + request.getSecondNumber();
-    request.setAdditionalProperty("sum", sum);
-    return request;
+  public String listen(Object request) throws InterruptedException {
+    logger.info("new request");
+    return "Ahojk";
   }
 
 

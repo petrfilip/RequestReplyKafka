@@ -47,7 +47,7 @@ public class KafkaConfig {
     props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 5000);
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     return props;
   }
 
@@ -56,38 +56,42 @@ public class KafkaConfig {
     Map<String, Object> props = new HashMap<>();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     return props;
   }
 
   @Bean
-  public ProducerFactory<String, Model> producerFactory() {
+  public ProducerFactory<String, String> producerFactory() {
     return new DefaultKafkaProducerFactory<>(producerConfigs());
   }
 
-  @Bean
-  public KafkaTemplate<String, Model> kafkaTemplate() {
-    return new KafkaTemplate<>(producerFactory());
-  }
 
   @Bean
-  public ReplyingKafkaTemplate<String, Model, Model> replyKafkaTemplate(ProducerFactory<String, Model> pf, KafkaMessageListenerContainer<String, Model> container) {
+  public ReplyingKafkaTemplate<String, String, String> replyKafkaTemplate(ProducerFactory<String, String> pf, KafkaMessageListenerContainer<String, String> container) {
     return new EgwReplyingKafkaTemplate(pf, container);
   }
 
   @Bean
-  public KafkaMessageListenerContainer<String, Model> replyContainer(ConsumerFactory<String, Model> cf) {
+  public KafkaMessageListenerContainer<String, String> replyContainer(ConsumerFactory<String, String> cf) {
     ContainerProperties containerProperties = new ContainerProperties(requestReplyTopic);
     return new KafkaMessageListenerContainer<>(cf, containerProperties);
   }
 
   @Bean
-  public ConsumerFactory<String, Model> consumerFactory() {
-    return new DefaultKafkaConsumerFactory<>(consumerConfigs(), new StringDeserializer(), new JsonDeserializer<>(Model.class));
+  public ConsumerFactory<String, String> consumerFactory() {
+    return new DefaultKafkaConsumerFactory<>(consumerConfigs(), new StringDeserializer(), new StringDeserializer());
+  }
+
+
+  @Bean
+  public KafkaTemplate<String, String> kafkaTemplate() {
+    return new KafkaTemplate<>(producerFactory());
   }
 
   @Bean
-  public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, Model>> kafkaListenerContainerFactory() {
-    ConcurrentKafkaListenerContainerFactory<String, Model> factory = new ConcurrentKafkaListenerContainerFactory<>();
+  public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> kafkaListenerContainerFactory() {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
     factory.setReplyTemplate(kafkaTemplate());
     return factory;
